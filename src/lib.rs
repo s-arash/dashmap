@@ -293,11 +293,17 @@ impl<'a, K: 'a + Eq + Hash, V: 'a, S: BuildHasher + Clone> DashMap<K, V, S> {
     /// Hash a given item to produce a usize.
     /// Uses the provided or default HashBuilder.
     pub fn hash_usize<T: Hash>(&self, item: &T) -> usize {
+        self.hash_u64(item) as usize
+    }
+
+    /// Hash a given item.
+    /// Uses the provided or default HashBuilder.
+    pub fn hash_u64<T: Hash>(&self, item: &T) -> u64 {
         let mut hasher = self.hasher.build_hasher();
 
         item.hash(&mut hasher);
 
-        hasher.finish() as usize
+        hasher.finish()
     }
 
     cfg_if! {
@@ -1143,13 +1149,13 @@ impl<'a, K: 'a + Eq + Hash, V: 'a, S: 'a + BuildHasher + Clone> Map<'a, K, V, S>
     }
 
     fn _entry(&'a self, key: K) -> Entry<'a, K, V, S> {
-        let hash = self.hash_usize(&key);
+        let hash = self.hash_u64(&key);
 
-        let idx = self.determine_shard(hash);
+        let idx = self.determine_shard(hash as usize);
 
         let shard = unsafe { self._yield_write_shard(idx) };
 
-        if let Some((kptr, vptr)) = shard.get_key_value(&key) {
+        if let Some((kptr, vptr)) = shard.raw_entry().from_key_hashed_nocheck(hash, &key) {
             unsafe {
                 let kptr: *const K = kptr;
                 let vptr: *mut V = vptr.as_ptr();

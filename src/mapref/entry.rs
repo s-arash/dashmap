@@ -117,6 +117,11 @@ impl<'a, K: Eq + Hash, V, S: BuildHasher> VacantEntry<'a, K, V, S> {
         }
     }
 
+    /// like `insert()`, except it does not return a reference to the inserted value 
+    pub fn insert_quick(mut self, value: V) {
+        self.shard.insert(self.key, SharedValue::new(value));
+    }
+
     pub fn into_key(self) -> K {
         self.key
     }

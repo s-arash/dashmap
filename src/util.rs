@@ -71,16 +71,19 @@ impl<T> SharedValue<T> {
     }
 
     /// Get a shared reference to `T`
+    #[inline(always)]
     pub fn get(&self) -> &T {
         unsafe { &*self.value.get() }
     }
 
     /// Get an unique reference to `T`
+    #[inline(always)]
     pub fn get_mut(&mut self) -> &mut T {
         unsafe { &mut *self.value.get() }
     }
 
     /// Unwraps the value
+    #[inline(always)]
     pub fn into_inner(self) -> T {
         self.value.into_inner()
     }
