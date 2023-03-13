@@ -149,6 +149,37 @@ impl<'a, K: 'a + Eq + Hash, V: 'a, S: BuildHasher + Clone> ReadOnlyView<K, V, S>
             }
         }
     }
+
+    cfg_if! {
+        if #[cfg(feature = "raw-api")] {
+            /// Finds which shard a certain hash is stored in.
+            ///
+            /// Requires the `raw-api` feature to be enabled.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// use dashmap::DashMap;
+            ///
+            /// let map: DashMap<i32, i32> = DashMap::new();
+            /// let key = "key";
+            /// let hash = map.hash_usize(&key);
+            /// println!("hash is stored in shard: {}", map.determine_shard(hash));
+            /// ```
+            pub fn determine_shard(&self, hash: usize) -> usize {
+                self.map.determine_shard(hash)
+            }
+        } else {
+            #[allow(dead_code)]
+            pub(crate) fn determine_shard(&self, hash: usize) -> usize {
+                self.map.determine_shard(hash)
+            }
+        }
+    }
+
+    pub fn hasher(&self) -> &S {
+        &self.map.hasher
+    }
 }
 
 #[cfg(test)]
